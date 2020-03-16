@@ -77,7 +77,7 @@
     methods:{
 			async getMenuList(){
 				//需要授权的 API ，必须在请求头中使用 `Authorization` 字段提供 `token` 令牌
-				this.$https.defaults.headers.common['Authorization'] = this.activePath
+        //this.$https.defaults.headers.common['Authorization'] = this.activePath
         const { data:res } = await this.$https.get('menus')
 				this.menuList = res.data
 			},

@@ -184,8 +184,8 @@
 			//请求页面数据
 		  async	getUserList(){
 		  	//需要授权的 API ，必须在请求头中使用 `Authorization` 字段提供 `token` 令牌
-		  	const AUTH_TOKEN = window.sessionStorage.getItem('token')
-				this.$https.defaults.headers.common['Authorization'] = AUTH_TOKEN
+		  	// const AUTH_TOKEN = window.sessionStorage.getItem('token')
+				// this.$https.defaults.headers.common['Authorization'] = AUTH_TOKEN
 				//query查询参数可以为空
 				//pagenum当前页码不能为空
         //pagesize每页显示条数不能为空

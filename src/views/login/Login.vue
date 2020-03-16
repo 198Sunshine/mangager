@@ -33,10 +33,7 @@
 			 async loginPost(){
 			 const res = await this.$https.post('login',this.formData)
          //解构赋值
-					const {
-						data,
-						meta:{ msg, status }
-					} = res.data
+					const {data,meta:{msg,status}} = res.data
 					//console.log(res)
 
 				 if(status === 200){

@@ -5,6 +5,7 @@ Vue.use(VueRouter)
 
 const Login =() => import ('views/login/Login')
 const Home = () => import('views/home/Home')
+
 const User = () => import('views/home/user/User')
 const Right = () => import('views/home/rights/Right')
 const Role = () => import('views/home/rights/Role')
