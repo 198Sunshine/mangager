@@ -304,7 +304,6 @@
 		  	this.dialogFormVisiblePoint = true
         const res = await this.$https.get('roles')
 				this.roles = res.data.data
-        //设置绑定的id设为空值
         this.seleteId = ''
 				//console.log(res)
 			},
