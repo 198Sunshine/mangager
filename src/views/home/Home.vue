@@ -10,7 +10,7 @@
         </el-col>
         <el-col :span="2">
           <el-row>
-            <el-button type="info" plain @click.prevent="logout">登出</el-button>
+            <el-button type="danger"  @click.prevent="logout">sign up</el-button>
           </el-row>
         </el-col>
       </el-row>
@@ -127,7 +127,6 @@
     color: #ddfffc;
   }
   el-button{
-    background-color: #4A5064;
     /*鼠标变小手*/
     cursor: pointer;
   }

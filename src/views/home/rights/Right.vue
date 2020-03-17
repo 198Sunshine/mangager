@@ -11,6 +11,7 @@
       <!--表格-->
       <el-table
         :data="rightsList"
+        height="550px"
         border
         style="width: 100%">
         <el-table-column type="index" label="#" width="80"></el-table-column>
@@ -49,9 +50,8 @@
 		 async getRights(){
 		  const {data:res} = await 	this.$https.get('rights/list')
 			 //console.log(res)
-			 res.meta.status === 200 ? console.log('') : this.$message.error('获取权限列表失败')
-       //将res赋值给权限列表
-       this.rightsList = res.data
+			 //将res赋值给权限列表
+			 res.meta.status === 200 ?  this.rightsList = res.data : this.$message.error('获取权限列表失败')
 		 }
 		}
 	}

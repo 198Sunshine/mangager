@@ -67,13 +67,14 @@
               icon="el-icon-delete"
               plain
               size="mini"
-              @click="delUser(userList.row.id)"
+              @click="delClickUser(userList.row.id)"
               circle></el-button>
-            <el-button type="warning"
-                       icon="el-icon-setting"
-                       plain size="mini"
-                       circle
-                       @click="pointClicktUser(userList.row)"></el-button>
+            <el-button
+              type="warning"
+              icon="el-icon-setting"
+              plain size="mini"
+              circle
+              @click="pointClicktUser(userList.row)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -91,17 +92,17 @@
       <!--弹出对话框-->
       <!--1、添加用户 对话框-->
       <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd" width="500px">
-        <el-form :model="adduser">
-          <el-form-item label="用户名" label-width="100px">
+        <el-form :model="adduser" :rules="rule">
+          <el-form-item label="用户名" label-width="100px" prop="username">
             <el-input v-model="adduser.username" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="密 码" label-width="100px">
-            <el-input v-model="adduser.password" autocomplete="off"></el-input>
+          <el-form-item label="密 码" label-width="100px" prop="password">
+            <el-input  type="password" v-model="adduser.password" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="邮箱" label-width="100px">
+          <el-form-item label="邮箱" label-width="100px" prop="email">
             <el-input v-model="adduser.email" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="电话" label-width="100px">
+          <el-form-item label="电话" label-width="100px" prop="mobile">
             <el-input v-model="adduser.mobile" autocomplete="off"></el-input>
           </el-form-item>
         </el-form>
@@ -112,14 +113,14 @@
       </el-dialog>
       <!--2、编辑用户 对话框-->
       <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit" width="500px">
-          <el-form :model="adduser">
-            <el-form-item label="用户名" label-width="100px">
+          <el-form :model="adduser" :rules="rule">
+            <el-form-item label="用户名" label-width="100px" prop="username">
               <el-input v-model="adduser.username" disabled  autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="邮箱" label-width="100px">
+            <el-form-item label="邮箱" label-width="100px" prop="email">
               <el-input v-model="adduser.email" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="电话" label-width="100px">
+            <el-form-item label="电话" label-width="100px" prop="mobile">
               <el-input v-model="adduser.mobile" autocomplete="off"></el-input>
             </el-form-item>
           </el-form>
@@ -157,12 +158,22 @@
 	export default {
 		name: "User",
     data(){
+			//自定义邮箱验证
+			let emailCheck = (rule,value,callback) => {
+				const emailReg = /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/
+				!emailReg.test(value) && callback(new Error('邮箱不合法'))
+			}
+			//自定义手机号验证
+      let mobileCheck = (rule,value,callback) => {
+				const mobileReg = /^1[3-578]\d{9}$/
+        !mobileReg.test(value) && callback(new Error('手机号不合法'))
+      }
 			return {
 				query:'',
 				userList:[],
         /*角色列表*/
         roles:[],
-        seleteId:"",
+        seleteId:'',
         pagenum:1,
         pagesize:2,
 				totals:0,
@@ -174,7 +185,26 @@
         },
 				dialogFormVisibleAdd:false,
         dialogFormVisibleEdit:false,
-				dialogFormVisiblePoint:false
+				dialogFormVisiblePoint:false,
+        //表单验证
+        rule:{
+        	username:[
+        		{ required: true, message: '请输入用户名', trigger: 'blur' },
+						{ min: 2, max: 10, message: '用户名的长度在2～10个字', trigger: 'blur'}
+          ],
+          password: [
+						{ required: true, message: '请输入用户密码', trigger: 'blur' },
+						{ min: 6, max: 18, message: '用户密码的长度在6～18个字', trigger: 'blur'}
+          ],
+          email:[
+						{ required: true, message: '请输入邮箱', trigger: 'blur'},
+            { validator: emailCheck, trigger: 'blur'}
+          ],
+					mobile:[
+						{ required: true, message: '请输入手机号', trigger: 'blur' },
+            { validator: mobileCheck, trigger: 'blur' }
+					]
+        }
       }
     },
     created(){
@@ -247,7 +277,7 @@
         	this.$message.warning(msg)
 			},
 			//删除用户
-      delUser(id){
+      delClickUser(id){
 					this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
 						confirmButtonText: '确定',
 						cancelButtonText: '取消',
