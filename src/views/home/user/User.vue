@@ -41,7 +41,7 @@
             {{userList.row.create_time | fmtDate}}
           </template>
         </el-table-column>
-        
+
         <el-table-column label="状态">
           <template slot-scope="userList">
            <el-switch
@@ -78,21 +78,26 @@
           </template>
         </el-table-column>
       </el-table>
+
         <!--分页显示-->
         <el-pagination
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-          :page-sizes="[2, 4, 6, 8]"
+          :page-sizes="[3, 6, 9, 12]"
+          :current-page="pagenum"
           :page-size="pagesize"
           layout="total, sizes, prev, pager, next, jumper"
           class="page"
           :total="totals">
         </el-pagination>
-      
+
       <!--弹出对话框-->
       <!--1、添加用户 对话框-->
       <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd" width="500px">
-        <el-form :model="adduser" :rules="rule">
+        <el-form :model="adduser"
+                 :rules="rule"
+                 status-icon
+                 ref="addUserRef">
           <el-form-item label="用户名" label-width="100px" prop="username">
             <el-input v-model="adduser.username" autocomplete="off"></el-input>
           </el-form-item>
@@ -113,7 +118,11 @@
       </el-dialog>
       <!--2、编辑用户 对话框-->
       <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit" width="500px">
-          <el-form :model="adduser" :rules="rule">
+          <el-form :model="adduser"
+                   :rules="rule"
+                   status-icon
+                   ref="editUserRef"
+          >
             <el-form-item label="用户名" label-width="100px" prop="username">
               <el-input v-model="adduser.username" disabled  autocomplete="off"></el-input>
             </el-form-item>
@@ -129,7 +138,7 @@
             <el-button type="primary" @click="editUser(adduser.id)">确 定</el-button>
           </div>
       </el-dialog>
-      
+
       <!--角色分配对话框-->
       <el-dialog title="角色分配" :visible.sync="dialogFormVisiblePoint" width="500px">
         <div class="point">
@@ -161,12 +170,12 @@
 			//自定义邮箱验证
 			let emailCheck = (rule,value,callback) => {
 				const emailReg = /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/
-				!emailReg.test(value) && callback(new Error('邮箱不合法'))
+				emailReg.test(value) ? callback(): callback(new Error('邮箱不合法'))
 			}
 			//自定义手机号验证
       let mobileCheck = (rule,value,callback) => {
 				const mobileReg = /^1[3-578]\d{9}$/
-        !mobileReg.test(value) && callback(new Error('手机号不合法'))
+        mobileReg.test(value) ? callback() : callback(new Error('手机号不合法'))
       }
 			return {
 				query:'',
@@ -175,7 +184,7 @@
         roles:[],
         seleteId:'',
         pagenum:1,
-        pagesize:2,
+        pagesize:3,
 				totals:0,
 				adduser:{
 					username:'',
@@ -219,9 +228,7 @@
 				//query查询参数可以为空
 				//pagenum当前页码不能为空
         //pagesize每页显示条数不能为空
-				const res = await this.$https.get(
-					`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
-        )
+				const res = await this.$https.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
 				//console.log(res)
 				const {data:{users,total},meta:{msg,status}} = res.data
 				if(status === 200) {
@@ -259,22 +266,26 @@
 				this.adduser = {}
       },
       //添加用户,发送请求
-      async addUser(){
-		  	//关闭对话框
-				this.dialogFormVisibleAdd = false
-        //发送请求
-		  	const res = await this.$https.post('users',this.adduser)
-        const {meta:{msg,status},data} = res.data
-				if(status === 201){
-        	//提示添加成功
-          this.$message.success(msg)
-          //更新视图
-          this.getUserList()
-          //清空对话框
-          this.adduser = {}
-        }else
-        	//创建失败提示
-        	this.$message.warning(msg)
+     addUser(){
+			 //开启表单预验证
+		  	this.$refs.addUserRef.validate(async valid => {
+		  		if(!valid) return
+					//关闭对话框
+					this.dialogFormVisibleAdd = false
+					//发送请求
+					const res = await this.$https.post('users',this.adduser)
+					const {meta:{msg,status}} = res.data
+					if(status === 201){
+						//提示添加成功
+						this.$message.success(msg)
+						//更新视图
+						this.getUserList()
+						//清空对话框
+						this.adduser = {}
+					}else
+					//创建失败提示
+						this.$message.warning(msg)
+        })
 			},
 			//删除用户
       delClickUser(id){
@@ -285,7 +296,7 @@
 					}).then(async () => {
 						//发送删除请求
             const res = await this.$https.delete('users/'+id)
-						console.log(res)
+						//console.log(res)
 						const {meta:{msg,status}} = res.data
             if(status === 200){
 							this.$message({
@@ -309,15 +320,23 @@
         this.adduser = user
 			},
       //编辑用户
-			 async editUser(id){
-		  	this.dialogFormVisibleEdit = false
-		  	const res = await this.$https.put('users/'+id,this.adduser)
-        const {meta:{msg,status}} = res.data
-         if(status === 200){
-					 this.$message.success(msg)
-            this.getUserList()
-				 }else
-					 this.$message.warning(msg)
+      editUser(id){
+		  	//开启表单预验证
+		  	this.$refs.editUserRef.validate(async valid =>{
+		  		if(!valid) return
+
+					this.dialogFormVisibleEdit = false
+					const res = await this.$https.put('users/'+id,this.adduser)
+					const {meta:{msg,status}} = res.data
+					// if(status === 200){
+					//  this.$message.success(msg)
+					//    this.getUserList()
+					// }else
+					//  this.$message.warning(msg)
+					//
+					status === 200 ? this.$message.success(msg) && this.getUserList() :this.$message.warning(msg)
+        })
+
 			 },
 			//修改用户状态
 			//users/:uId/state/:type

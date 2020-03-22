@@ -17,7 +17,7 @@
         style="width: 100%">
         <el-table-column type="expand">
           <template  slot-scope="rolesList">
-            <!--无权限是显示提示-->
+            <!--无权限显示提示-->
             <p v-if="rolesList.row.children.length === 0" class="">未分配权限</p>
             <!--有权限时显示的标签-->
             <el-row

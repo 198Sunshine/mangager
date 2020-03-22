@@ -5,6 +5,7 @@
       :model="formData"
       ref="loginFormRef"
       class="login-form"
+      status-icon
       :rules="rules">
       <div class="avater"><img src="~assets/img/logo1.png"/></div>
       <div class="form-div">
@@ -15,7 +16,7 @@
          <el-form-item label="密 码" prop="password">
            <el-input  type="password" v-model="formData.password" prefix-icon="el-icon-lock" ></el-input>
          </el-form-item>
-         <el-button  @click.prevent='loginPost'  class="login-button" type="primary">登录</el-button>
+         <el-button  @click='loginPost'  class="login-button" type="primary">登录</el-button>
         <el-button type="info"class="login-button" @click="loginReset">重置</el-button>
       </div>
     </el-form>
@@ -60,38 +61,10 @@
 						//登录成功跳转到home组件
 						await this.$router.push('/home')
             //登录成功显示
-						this.$message({
-							showClose: true,
-							message: msg,
-							type: 'success'
-						})
-					}
+						this.$message.success(msg)
+					}else
+						this.$message.error('登陆失败')
 			}
-			// loginPost(){
-			// 	this.$https.post('login',this.formData).then(res => {
-			// 		const {
-			// 			data,
-      //       meta:{ msg, status }
-      //     } = res.data
-			// 		console.log(res)
-      //
-			// 		if(status === 200){
-      //       this.$router.push('/home')
-			//
-			// 			this.$message({
-			// 				showClose: true,
-			// 				message: msg,
-			// 				type: 'success'
-			// 			})
-			// 		}else{
-			// 			this.$message({
-			// 				showClose: true,
-			// 				message: msg,
-			// 				type: 'warning'
-			// 			})
-      //     }
-			// 	})
-      // }
     }
 	}
 </script>

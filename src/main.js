@@ -10,6 +10,9 @@ import ServerHttps from 'plugins/https'
 import Element from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
+//引入vue-table-with-tree-grid表格插件
+import ZkTable from 'vue-table-with-tree-grid'
+
 //配置全局过滤器,处理时间戳
 Vue.filter('fmtDate',(value) => {
   return moment(value).format('YYYY-MM-DD')
@@ -17,6 +20,7 @@ Vue.filter('fmtDate',(value) => {
 Vue.config.productionTip = false
 Vue.use(Element)
 Vue.use(ServerHttps)
+Vue.use(ZkTable)
 
 new Vue({
   router,
