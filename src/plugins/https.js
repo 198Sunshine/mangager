@@ -5,7 +5,8 @@ const MyPlugin = {}
 
 MyPlugin.install = (Vue)=> {
   //本地ip
-   axios.defaults.baseURL = `http://127.0.0.1:8888/api/private/v1`
+ axios.defaults.baseURL = `http://127.0.0.1:8888/api/private/v1`
+  //axios.defaults.baseURL = 'https://www.liulongbin.top:8888/api/private/v1/'
   /*axios.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
     return config;

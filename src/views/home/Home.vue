@@ -18,18 +18,26 @@
     </el-header>
     
     <el-container class="aside-menu">
-      <el-aside :width="isCollapse ? '64px' : '180px'" class="aside">
-        <div class="toggle-button" @click="toggleMenu"><i class="el-icon-d-arrow-right"></i></div>
+      <el-aside  :width="isCollapse ? '64px' : '180px' " class="aside">
+        <div class="toggle-button" @click="toggleMenu">
+         <i v-if="isCollapse" class="el-icon-d-arrow-right"></i>
+          <i v-else class="el-icon-d-arrow-left"></i>
+        </div>
+        <!--unique-opened 只允许展开一个菜单-->
+        <!--collapse-transition 关闭动画-->
         <el-menu
           default-active="2"
           text-color="#ffffff"
           active-text-color="gold"
           :unique-opened="true"
-          :router="true"
+          router
+          :collapse-transition="false"
           :collapse="isCollapse"
           >
           <!--左侧菜单-->
-          <el-submenu  v-for="(item,index) in menuList" :index="item.id+''" :key="item.id">
+          <el-submenu  v-for="item in menuList"
+                       :index="item.id+''"
+                       :key="item.id">
             <template slot="title">
               <i :class="iconObj[item.id]"></i>
               <span>{{item.authName}}</span>
@@ -67,7 +75,7 @@
         //默认路径
         activePath:'',
         menuList:[],
-				isCollapse:true,
+				isCollapse:false,
         width:''
       }
     },

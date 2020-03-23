@@ -18,7 +18,8 @@ const Category = () => import('views/home/goods/Category')
 const Order = () => import('views/home/order/Order')
 const Report = () => import('views/home/report/Report')
 const Add =() => import('views/home/goods/GoodAdd')
-
+const Edit =() => import('views/home/goods/GoodEdit')
+const Welcome =() => import('views/welcome/Welcome')
 const routes = [
   {
     path:'/',
@@ -40,14 +41,15 @@ const routes = [
       {path:'/categories',component:Category},
       {path:'/orders',component:Order},
       {path:'/reports',component:Report},
-      {path:'/add',component:Add}
+      {path:'/add',component:Add},
+      {path:'/welcome', component:Welcome},
+      {path:'/edit',component:Edit}
       ]
   }
 ]
 
 const router = new VueRouter({
-  routes,
-  mode:'history'
+  routes
 })
 
 //设置路由守卫

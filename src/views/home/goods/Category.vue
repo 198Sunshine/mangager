@@ -2,7 +2,7 @@
   <div>
     <!--面包屑导航-->
     <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>商品管理</el-breadcrumb-item>
       <el-breadcrumb-item>商品分类</el-breadcrumb-item>
     </el-breadcrumb>
@@ -50,7 +50,7 @@
       <el-pagination
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-          :page-sizes="[4, 8, 12]"
+          :page-sizes="[5, 10, 15]"
           :current-page="pageNum"
           :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper"
@@ -60,12 +60,12 @@
 
     </el-card>
     <!--弹出对话框-->
-    <el-dialog title="添加分类"  :visible.sync="dialogFormVisibleAdd" width="500px">
-      <el-form :model="addForm" label-position="left" label-width="80px">
-        <el-form-item label="分类名称"   >
+    <el-dialog title="添加分类"  :visible.sync="dialogFormVisibleAdd" width="500px" @close="closeDia">
+      <el-form :model="addForm" :rules="rules" label-position="left" label-width="80px">
+        <el-form-item label="分类名称" prop="cat_name">
           <el-input  v-model="addForm.cat_name" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="父类名称">
+        <el-form-item label="父类名称" prop="cat_father">
           <!--级联选择器-->
           <el-cascader
               v-model="value"
@@ -105,7 +105,7 @@
     data(){
       return {
         props: {
-          expandType:false,
+          expandType: false,
           selectionType: false,
         },
         columns: [
@@ -117,58 +117,70 @@
           {
             label: '是否有效',
             minWidth: '50px',
-            type:'template',
-            template:'status'
+            type: 'template',
+            template: 'status'
           },
           {
             label: '排序',
             //自定义模板
-            type:'template',
+            type: 'template',
             template: 'level'
           },
           {
             label: '操作',
             minWidth: '200px',
             type: 'template',
-            template:'setting'
+            template: 'setting'
           },
         ],
+        //全部分类id
+        id:[],
         //对话框表单
-        addForm:{
-          cat_name:''
+        addForm: {
+          cat_name: ''
         },
-        dialogFormVisibleAdd:false,
-        dialogFormVisibleEdit:false,
+        dialogFormVisibleAdd: false,
+        dialogFormVisibleEdit: false,
         //级联选择器数据
-        value:[],
+        value: [],
+        cat_level: -1,
         //表格数据
-        tableData:[],
-        cat_id:-1,
-        type:3,
+        tableData: [],
+        cat_id: -1,
+        type: 3,
         //每页条数
-        pageSize:5,
+        pageSize: 5,
         //当前页码
-        pageNum:1,
+        pageNum: 1,
         //总条数
-        totals:0
+        totals: 0,
+        //表单验证规则
+        rules: {
+         cat_name:[
+           { required: true, message: '请输入分类名称', trigger: 'blur' },
+           { min: 1, max: 10, message: '长度在 1 至 10 个字符', trigger: 'blur' }
+           ]
+         }
       }
     },
     created() {
 		  //获取商品分类列表
-      this.getGoodsCateGory()
+      let  pageSize = this.pageSize
+     let  pageNum = this.pageNum
+      this.getGoodsCateGory(3,pageSize,pageNum)
     },
     methods:{
       handleSizeChange(val) {
        this.pageSize = val
-        console.log(val)
-        this.getGoodsCateGory()
+        //console.log(val)
+        this.getGoodsCateGory(3,val,this.pageNum)
       },
       handleCurrentChange(val) {
         this.pageNum = val
-        this.getGoodsCateGory()
+        this.getGoodsCateGory(3,this.pageSize,val)
       },
-      async getGoodsCateGory(type){
-        const res = await this.$https.get(`/categories?type=${type}&pagesize=${this.pageSize}&pagenum=${this.pageNum}`)
+      async getGoodsCateGory(type,pageSize,pageNum){
+        const res = await this.$https.get(`/categories?type=${type}&pagesize=${pageSize}&pagenum=${pageNum}`)
         const {meta:{status,msg},data:{result,total}} = res.data
         this.totals = total
         //console.log(res)
@@ -176,8 +188,15 @@
       },
       //点击弹出添加分类对话框
       addClick(){
+        let pageSize = this.totals
+        let pageNum = 1
         this.dialogFormVisibleAdd = true
-        this.getGoodsCateGory(2)
+
+        this.getGoodsCateGory(2,pageSize,pageNum)
+      },
+      //关闭对话框触发
+      closeDia(){
+        this.getGoodsCateGory(3,this.pageSize,this.pageNum)
       },
       //点击提交分类
       async addCate(){
@@ -185,14 +204,28 @@
         //cat_pid分类父 ID不能为空，如果要添加1级分类，则父分类Id应该设置为  `0`
         //cat_name分类名称不能为空
         //cat_level分类层级不能为空，`0`表示一级分类；`1`表示二级分类；`2`表示三级分类
+        //判断value和cat_level的值
+        if(this.value.length ===0){
+          this.value = 0
+          this.cat_level = 0
+        }
+        else if(this.value.length === 1){
+          this.value = this.value[0]
+          this.cat_level = 1
+        }
+        else if(this.value.length === 2){
+          this.value = this.value[1]
+          this.cat_level = 2
+        }
         const res = await this.$https.post('/categories',{
-          cat_pid:this.value[1],
+          cat_pid:this.value,
           cat_name:this.addForm.cat_name,
-          cat_level:'2'
+          cat_level:this.cat_level
         })
-        this.getGoodsCateGory(3)
         const {meta:{msg,status}} = res.data
         status === 201?this.$message.success(msg): this.$message.warning(msg)
+        this.addForm = {}
+        this.getGoodsCateGory(3,this.pageSize,this.pageNum)
         //console.log(res)
       },
       //级联选择器节点改变触发
@@ -217,7 +250,7 @@
        //重置表单
        this.addForm = {}
        //刷新列表
-       this.getGoodsCateGory()
+       this.getGoodsCateGory(2,this.pageSize,this.pageNum)
        //console.log(res)
      },
       //删除分类
@@ -231,7 +264,7 @@
           const {meta: {status, msg}} = res.data
           status === 200 ? this.$message.success(msg) : this.$message.warning(msg)
           //console.log(id)
-          this.getGoodsCateGory()
+          this.getGoodsCateGory(2,this.pageSize,this.pageNum)
         }).catch(() => {
           this.$message.info('已取消删除')
         })

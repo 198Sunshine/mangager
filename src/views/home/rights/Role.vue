@@ -2,7 +2,7 @@
   <div>
     <!--面包屑导航-->
     <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>权限管理</el-breadcrumb-item>
       <el-breadcrumb-item>角色列表</el-breadcrumb-item>
     </el-breadcrumb>
@@ -86,12 +86,19 @@
       </el-table>
     </el-card>
   <!--1、点击添加角色 对话框-->
-    <el-dialog title="添加角色" :visible.sync="dialogFormVisibleadd" width="500px">
-      <el-form :model="form">
-        <el-form-item label="角色名称" label-width="300">
-          <el-input v-model="form.roleName" autocomplete="off"></el-input>
+    <el-dialog title="添加角色" :visible.sync="dialogFormVisibleadd"  width="500px"  @close="closeDia">
+      <el-form
+          :model="form"
+          status-icon
+          :rules="rules"
+          label-position="left"
+          label-width="80px"
+          ref="formAdd"
+      >
+        <el-form-item label="角色名称"  prop="roleName">
+          <el-input v-model="form.roleName"  autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色描述" label-width="300">
+        <el-form-item label="角色描述" prop="roleDesc">
           <el-input v-model="form.roleDesc" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -101,12 +108,18 @@
       </div>
     </el-dialog>
   <!--2、点击编辑 对话框-->
-    <el-dialog title="编辑角色" :visible.sync="dialogFormVisibleEdit" width="500px">
-      <el-form :model="form">
-        <el-form-item label="角色名称" label-width="300">
+    <el-dialog title="编辑角色" :visible.sync="dialogFormVisibleEdit" width="500px" @close="closeDia">
+      <el-form :model="form"
+               :rules="rules"
+               show-message
+               label-position="left"
+               status-icon
+               ref="formEdit"
+               label-width="80px">
+        <el-form-item label="角色名称" prop="roleName">
           <el-input v-model="form.roleName" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色描述" label-width="300">
+        <el-form-item label="角色描述" prop="roleDesc">
           <el-input v-model="form.roleDesc" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -116,7 +129,7 @@
       </div>
     </el-dialog>
     <!--3、点击分配角色 对话框-->
-    <el-dialog title="分配权限" :visible.sync="dialogFormVisiblePoint" width="500px">
+    <el-dialog title="分配权限" :visible.sync="dialogFormVisiblePoint" width="500px"  @close="closeDia">
       <el-tree
         :data="rightsList"
         show-checkbox
@@ -149,6 +162,17 @@
 					roleName:'',
           roleDesc:''
         },
+        //添加表单验证
+        rules: {
+          roleName: [
+            {required: true, message: '请输入角色名称', trigger: 'blur'},
+            {min: 4, max: 6, message: '长度在 4 到 6 个字符', trigger: 'blur'}
+          ],
+          roleDesc: [
+            {required: true, message: '请输入角色描述', trigger: 'blur'},
+            {min: 5, max: 20, message: '长度在 5 到 20 个字符', trigger: 'blur'}
+          ],
+        },
         //树形结构的数据
 				rightsList:[],
 				defaultProps:{
@@ -173,27 +197,45 @@
 		  	//开启对话框
 		  	this.dialogFormVisibleadd = true
       },
-      async addRoles(){
-		  	//关闭对话框
-		  	this.dialogFormVisibleadd = false
-		  	const res = await this.$https.post('roles',this.form)
-				const {meta:{status,msg}} = res.data
-        status === 201 ? this.$message.success(msg) : this.$message.warning(msg)
-        //刷新界面
-        this.getRole()
+      //添加角色
+      addRoles(){
+		    this.$refs.formAdd.validate( async valid => {
+		      if(!valid){
+		        this.$message.warning('请确认是否按要求填写')
+            return false
+          }
+          //关闭对话框
+          this.dialogFormVisibleadd = false
+          const res = await this.$https.post('roles',this.form)
+          const {meta:{status,msg}} = res.data
+          status === 201 ? this.$message.success(msg) : this.$message.warning(msg)
+          //刷新界面
+          this.getRole()
+        })
 			},
+      //关闭对话框前刷新
+      closeDia(){
+		    this.form = {}
+		    this.getRole()
+      },
       //点击编辑弹出对话框
 			handleEdit(user){
 		  	this.dialogFormVisibleEdit = true
         this.form = user
       },
       //编辑角色
-      async editRoles(){
-				this.dialogFormVisibleEdit = false
-				const res = await this.$https.put(`roles/${this.form.id}`,this.form)
-				const {meta:{status,msg}} = res.data
-        status === 200 ? console.log('') : this.$message.warning(msg)
-        this.getRole()
+      editRoles(){
+		    this.$refs.formEdit.validate(async valid => {
+          if(!valid){
+            this.$message.warning('请确认是否按要求填写')
+            return false
+          }
+          this.dialogFormVisibleEdit = false
+          const res = await this.$https.put(`roles/${this.form.id}`,this.form)
+          const {meta:{status,msg}} = res.data
+          status === 200 ? console.log('') : this.$message.warning(msg)
+          this.getRole()
+        })
 			},
       //点击删除弹出
       handleDelete(user){
@@ -266,7 +308,7 @@
           ...this.$refs.treeKeys.getHalfCheckedKeys()
          ].join(',')
 				 const res = await this.$https.post(`roles/${this.currentId}/rights`,{rids:keys})
-				 console.log(res)
+				 //console.log(res)
 				 const {meta:{status,msg}} = res.data
          status === 200 ? this.$message.success(msg) : this.$message.warning(msg)
          this.getRole()

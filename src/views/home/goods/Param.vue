@@ -2,7 +2,7 @@
   <div>
     <!--面包屑导航-->
     <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>商品管理</el-breadcrumb-item>
       <el-breadcrumb-item>参数列表</el-breadcrumb-item>
     </el-breadcrumb>
@@ -83,7 +83,7 @@
                                      size="mini"
                                      icon="el-icon-edit"
                                      circle
-                                     @click="editClick(scope.row.attr_id)"></el-button>
+                                     @click="editClick(scope.row)"></el-button>
                           <el-button type="danger"
                                      size="mini"
                                      icon="el-icon-delete"
@@ -101,7 +101,7 @@
                         type="primary"
                         :disabled="isdisabled"
                         size="mini"
-                        @click="addClick">添加参数
+                        @click="addClick">添加属性
                     </el-button>
                   </el-form-item>
                   <!--表格-->
@@ -130,7 +130,11 @@
                             @blur="handleInputConfirm(scope.row)"
                         >
                         </el-input>
-                        <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
+                        <el-button v-else
+                                   class="button-new-tag" size="small"
+                                   @click="showInput(scope.row)" aria-placeholder="1">
+                          +New tag
+                        </el-button>
                       </template>
                     </el-table-column>
                     <!--索引-->
@@ -170,9 +174,15 @@
         </el-form-item>
 
         <!--弹出添加参数对话框-->
-        <el-dialog :title="parmForm.addParmTitle" :visible.sync="dialogFormVisibleAdd" width="500px">
-          <el-form class="form" :model="form">
-            <el-form-item :label="parmForm.parmName"  label-width="100px">
+        <el-dialog :title="parmForm.addParmTitle"
+                   :visible.sync="dialogFormVisibleAdd"
+                   width="500px">
+          <el-form class="form"
+                   :model="form"
+                   label-position="left"
+                   ref="parForm"
+                   label-width="80px">
+            <el-form-item :label="parmForm.parmName" prop="name">
               <el-input v-model="form.attr_name" autocomplete="off"></el-input>
             </el-form-item>
           </el-form>
@@ -187,8 +197,11 @@
                    width="500px"
                    @close="editClose"
         >
-          <el-form class="form" >
-            <el-form-item :label="parmForm.parmName"  label-width="100px">
+          <el-form class="form"
+                   label-position="left"
+                   label-width="80px"
+                   ref="parForm">
+            <el-form-item :label="parmForm.parmName" prop="name">
               <el-input v-model="form.attr_name" autocomplete="off"></el-input>
             </el-form-item>
           </el-form>
@@ -232,7 +245,7 @@
         dialogFormVisibleEdit:false,
         //input的样式
         inputVisible:false,
-        inputValue:'+ New Tags'
+        inputValue:''
       }
     },
     created() {
@@ -290,25 +303,25 @@
         this.dialogFormVisibleAdd = true
       },
       //添加动态参数
-      async addParam() {
-        this.dialogFormVisibleAdd = false
-        //请求路径：categories/:id/attributes
-        //:id分类 ID不能为空`携带在url中
-        // attr_name参数名称不能为空
-        // attr_sel[only,many]不能为空
-        // attr_vals如果是 many 就需要填写值的选项，以逗号分隔【可选参数】
-        const res = await this.$https.post(
-          `categories/${this.value[2]}/attributes`, {
-            attr_name: this.form.attr_name,
-            attr_sel: this.attr_sel,
-            attr_vals: this.attr_vals.join(',')
-          }
-        )
-        res.data.meta.status === 201 ? this.$message.success(res.data.meta.msg) : this.$message.warning(res.data.meta.msg)
-        //清空表单元素
-        this.form = {}
-        this.getParamList()
-        //console.log(res)
+     async addParam() {
+          this.dialogFormVisibleAdd = false
+          //请求路径：categories/:id/attributes
+          //:id分类 ID不能为空`携带在url中
+          // attr_name参数名称不能为空
+          // attr_sel[only,many]不能为空
+          // attr_vals如果是 many 就需要填写值的选项，以逗号分隔【可选参数】
+          const res = await this.$https.post(
+            `categories/${this.value[2]}/attributes`,
+            {
+              attr_name: this.form.attr_name,
+              attr_sel: this.attr_sel,
+              attr_vals: this.attr_vals.join(',')
+            }
+          )
+          res.data.meta.status === 201 ? this.$message.success(res.data.meta.msg) : this.$message.warning(res.data.meta.msg)
+          //清空表单元素
+          this.form = {}
+          this.getParamList()
       },
       //删除商品参数/属性
       delParam(id) {
@@ -328,7 +341,8 @@
       },
       // 更新参数/属性
       async updateParm(row) {
-        const res = await this.$https.put(`categories/${this.value[2]}/attributes/${this.attr_id}`, {
+        const res = await this.$https.put(`categories/${this.value[2]}/attributes/${this.attr_id}`,
+          {
           //attr_name新属性的名字不能为空，携带在`请求体`中
           // attr_sel属性的类型[many或only]不能为空，携带在`请求体`中
           // attr_vals参数的属性值可选参数，携带在`请求体`中id
@@ -336,24 +350,27 @@
           attr_sel: this.attr_sel,
           attr_vals: row.attr_vals.join(',')
         })
-        console.log(this.attr_id)
+        //console.log(res)
         const {meta: {status, msg}} = res.data
         status === 200 ? this.$message.success('修改参数成功') : this.$message.warning(msg)
-        this.form = {}
       },
       //点击弹出编辑对话框
-      editClick(id) {
+      editClick(row) {
         this.dialogFormVisibleEdit = true
-        this.attr_id = id
+        this.attr_id = row.attr_id
+        this.form.attr_name = row.attr_name
       },
       //编辑动态参数
-      editParam() {
-        let row = {}
-         this.paramList.forEach(item => {
-           row = item
-        })
-        this.updateParm(row)
-        this.dialogFormVisibleEdit = false
+      editParam(){
+          let row = {}
+          this.paramList.forEach(item => {
+            row = item
+          }
+          )
+          this.updateParm(row)
+          //清除form表单
+          this.form = {}
+          this.dialogFormVisibleEdit = false
       },
       //监听编辑弹框关闭
       editClose(){
@@ -370,6 +387,7 @@
       },
       showInput() {
        this.inputVisible = true
+        this.inputValue = '+New tag'
         //   让输入框自动获取焦点
         // $nextTick方法的作用：当页面元素被重新渲染之后，才会至指定回调函数中的代码
         this.$nextTick(_ => {
@@ -378,7 +396,7 @@
       },
       handleInputConfirm(row) {
         if (row.inputValue.trim().length === 0) {
-          row.inputValue = ''
+          row.inputValue = ' '
           row.inputVisible = false
           return
         }
@@ -386,7 +404,7 @@
         this.attr_id = row.attr_id
         row.attr_vals.push(row.inputValue.trim())
         row.inputValue = ''
-        row.inputVisible = false
+        row.inputVisible = true
         this.updateParm(row)
     }
     }
@@ -397,7 +415,7 @@
   .box-card{
     height:600px;
     overflow: auto;
-    text-align: center;
+    text-align: left;
     margin-top: 10px;
   }
   .el-alert{

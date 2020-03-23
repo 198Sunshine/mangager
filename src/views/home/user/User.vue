@@ -2,7 +2,7 @@
   <div>
   <!--面包屑导航-->
   <el-breadcrumb separator-class="el-icon-arrow-right">
-    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+    <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
     <el-breadcrumb-item>用户管理</el-breadcrumb-item>
     <el-breadcrumb-item>用户列表</el-breadcrumb-item>
   </el-breadcrumb>
@@ -26,9 +26,9 @@
         :data="userList"
         border
         style="width: 100%">
-        <el-table-column type="index" label="#" width="80"></el-table-column>
+        <el-table-column type="index" label="#" width="60"></el-table-column>
         <el-table-column prop="username" label="姓名"></el-table-column>
-        <el-table-column prop="email" label="邮箱"></el-table-column>
+        <el-table-column prop="email" width="300" label="邮箱"></el-table-column>
         <el-table-column prop="mobile" label="电话"></el-table-column>
         <el-table-column prop="role_name" label="角色"></el-table-column>
         <!--
@@ -67,7 +67,7 @@
               icon="el-icon-delete"
               plain
               size="mini"
-              @click="delClickUser(userList.row.id)"
+              @click="delClickUser(userList.row.id,userList.row.username)"
               circle></el-button>
             <el-button
               type="warning"
@@ -135,7 +135,7 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
-            <el-button type="primary" @click="editUser(adduser.id)">确 定</el-button>
+            <el-button type="primary" @click="editUser(adduser.id,adduser.username)">确 定</el-button>
           </div>
       </el-dialog>
 
@@ -288,26 +288,31 @@
         })
 			},
 			//删除用户
-      delClickUser(id){
+     delClickUser(id,username){
 					this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
 						confirmButtonText: '确定',
 						cancelButtonText: '取消',
 						type: 'warning'
-					}).then(async () => {
-						//发送删除请求
-            const res = await this.$https.delete('users/'+id)
-						//console.log(res)
-						const {meta:{msg,status}} = res.data
-            if(status === 200){
-							this.$message({
-								type: 'success',
-								message: msg
-							})
-              this.getUserList()
-            }
-            else
-            	this.$message.warning(msg)
-					}).catch(() => {
+					}).then(async ( ) => {
+         if(id === 500 && username === 'admin_001'){
+               this.$message.error('不允许删除此账号')
+               return
+             }
+           //发送删除请求
+           const res = await this.$https.delete('users/'+id)
+           //console.log(res)
+           const {meta:{msg,status}} = res.data
+           if(status === 200){
+             this.$message({
+               type: 'success',
+               message: msg
+             })
+             this.getUserList()
+           }
+           else
+             this.$message.warning(msg)
+					})
+            .catch(() => {
 						this.$message({
 							type: 'info',
 							message: '已取消删除'
@@ -320,27 +325,35 @@
         this.adduser = user
 			},
       //编辑用户
-      editUser(id){
+      editUser(id,username){
+		    //验证此账号是否是admin001
+        if(id === 500 && username === 'admin_001'){
+          this.$message.error('不允许修改此账号')
+          return
+        }
 		  	//开启表单预验证
-		  	this.$refs.editUserRef.validate(async valid =>{
-		  		if(!valid) return
-
-					this.dialogFormVisibleEdit = false
-					const res = await this.$https.put('users/'+id,this.adduser)
-					const {meta:{msg,status}} = res.data
-					// if(status === 200){
-					//  this.$message.success(msg)
-					//    this.getUserList()
-					// }else
-					//  this.$message.warning(msg)
-					//
-					status === 200 ? this.$message.success(msg) && this.getUserList() :this.$message.warning(msg)
+		  	this.$refs.editUserRef.validate(async valid => {
+          if (!valid) return
+          this.dialogFormVisibleEdit = false
+          const res = await this.$https.put('users/'+id,this.adduser)
+          const {meta:{msg,status}} = res.data
+          // if(status === 200){
+          //  this.$message.success(msg)
+          //    this.getUserList()
+          // }else
+          //  this.$message.warning(msg)
+          //
+          status === 200 ? this.$message.success(msg) && this.getUserList() :this.$message.warning(msg)
         })
-
 			 },
 			//修改用户状态
 			//users/:uId/state/:type
 			async updateStatus(user){
+        if(user.id === 500 && user.username === 'admin_001'){
+          this.$message.error('不允许修改此账号')
+          this.getUserList()
+          return
+        }
 		  const res = await	this.$https.put(`users/${user.id}/state/${user.mg_state}`)
         /*if(res.data.meta.status === 200){
         	this.$message.success('更新状态成功!')
@@ -360,6 +373,10 @@
 			async pointUser(){
 		  	//users/:id/role
         this.dialogFormVisiblePoint = false
+        if(this.adduser.id === 500 &&this.adduser.username === 'admin_001'){
+          this.$message.error('不允许修改此账号')
+          return
+        }
 		  	const res = await this.$https.put(`users/${this.adduser.id}/role`,{rid:this.seleteId})
         const {meta:{msg,status}} = res.data
 				res.data.meta.status === 200 ? this.$message.success(msg) : this.$message.info(msg)

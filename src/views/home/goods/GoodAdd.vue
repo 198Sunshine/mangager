@@ -2,7 +2,7 @@
   <div>
     <!--面包屑导航-->
     <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>商品管理</el-breadcrumb-item>
       <el-breadcrumb-item>商品信息</el-breadcrumb-item>
     </el-breadcrumb>
@@ -19,20 +19,20 @@
         <el-step title="完成"></el-step>
       </el-steps>
       <!--Tab标签栏-->
-      <el-form label-position="top" :model="goodsForm">
+      <el-form label-position="top" :model="goodsForm" :rules="rules" ref="formGoods">
         <el-tabs tab-position="left" @tab-click="tabClick()"  v-model="isActive" :before-leave="beforeLeave">
           <el-tab-pane name="0" label="基本信息">
-            <el-form-item label="商品名称">
+            <el-form-item label="商品名称" prop="goods_name" >
               <el-input v-model="goodsForm.goods_name"></el-input>
             </el-form-item>
-            <el-form-item label="商品价格">
-              <el-input v-model="goodsForm.goods_price"></el-input>
+            <el-form-item label="商品价格"  prop="goods_price">
+              <el-input v-model="goodsForm.goods_price" type="number"></el-input>
             </el-form-item>
-            <el-form-item label="商品数量">
-              <el-input v-model="goodsForm.goods_number"></el-input>
+            <el-form-item label="商品数量"  prop="goods_number">
+              <el-input v-model="goodsForm.goods_number" type="number"></el-input>
             </el-form-item>
-            <el-form-item label="商品重量">
-              <el-input v-model="goodsForm.goods_weight"></el-input>
+            <el-form-item label="商品重量"  prop="goods_weight">
+              <el-input v-model="goodsForm.goods_weight" type="double"></el-input>
             </el-form-item>
             <el-form-item label="商品分类">
               <!--级联选择器-->
@@ -120,6 +120,21 @@
           attrs:[],
           pics:[]
         },
+        //表单验证规则
+        rules:{
+          goods_name:[
+            { required: true, message: '请输入商品名称',trigger:'blur'},
+          ],
+          goods_price:[
+            {required:true,message:'请输入商品价格',trigger:'blur'},
+          ],
+          goods_number:[
+            {required:true,message:'请输入商品数量',trigger:'blur'},
+          ],
+          goods_weight:[
+            {required:true,message:'请输入商品价格',trigger:'blur'},
+          ]
+        },
         seletedOptions:[],
         //设置默认显示的分类
         value:[],
@@ -146,10 +161,10 @@
       },
       //切换标签之前的钩子，若返回 false 或者返回 Promise 且被 reject，则阻止切换。
       beforeLeave(active,oldActive){
-        if(oldActive === '0'&& this.value.length !== 3){
-          this.$message.warning('请先选择商品分类')
-          return false
-        }
+          if(oldActive === '0'&& this.value.length !== 3){
+            this.$message.warning('请选择商品分类')
+            return false
+          }
       },
       //当tab标签页选中触发
       tabClick(){
@@ -209,13 +224,20 @@
         this.goodsForm.pics.push({pic:file.data.tmp_path})
       },
       //添加商品
-       async addGoods(){
-         this.goodsForm.goods_cat = this.value.join(',')
-         const res = await this.$https.post('/goods',this.goodsForm)
-        const {meta:{msg,status}} = res.data
-         status === 201 ? this.$message.success(msg) : this.$message.error(msg)
-         console.log(this.goodsForm)
-         this.$router.back()
+      addGoods(){
+          this.$refs.formGoods.validate(async vaild => {
+            if(!vaild){
+              this.$message.warning('请正确填写商品表单信息')
+              return false
+            }
+            this.goodsForm.goods_cat = this.value.join(',')
+            const res = await this.$https.post('/goods',this.goodsForm)
+            const {meta:{msg,status}} = res.data
+            status === 201 ? this.$message.success(msg) : this.$message.error(msg)
+            //console.log(this.goodsForm)
+            this.$router.back()
+          })
+
        },
       //返回上一级页面
       goBack(){

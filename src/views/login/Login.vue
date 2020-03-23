@@ -35,7 +35,7 @@
 				rules: {
 					username: [
 						{ required: true, message: '请输入用户名', trigger: 'blur' },
-						{ min: 3, max: 8, message: '长度在 3 到 8 个字符', trigger: 'blur' }
+						{ min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
 					],
           password: [
 						{ required: true, message: '请输入密码', trigger: 'blur' },
@@ -59,7 +59,7 @@
 						//登录成功保存token值
             window.sessionStorage.setItem('token',data.token)
 						//登录成功跳转到home组件
-						await this.$router.push('/home')
+						await this.$router.push('/welcome')
             //登录成功显示
 						this.$message.success(msg)
 					}else
